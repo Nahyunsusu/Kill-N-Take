@@ -17,7 +17,7 @@ public class UnitMove : MonoBehaviour
         
     }
 
-    protected void MoveTo(Vector3 targetPos)
+    public void MoveTo(Vector3 targetPos)
     {
         if (_agent != null && _agent.isOnNavMesh)
         {

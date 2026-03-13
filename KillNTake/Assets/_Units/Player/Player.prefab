@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 574749451930038087}
   - component: {fileID: 2055813859235211110}
   - component: {fileID: 6694542815012343348}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Capsule
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -123,10 +123,11 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2477455832651498137}
-  - component: {fileID: 5853055941850825285}
+  - component: {fileID: 1519021727044664401}
   - component: {fileID: 4991973681043283286}
   - component: {fileID: 2708052207661938758}
-  m_Layer: 0
+  - component: {fileID: 3859275648243693806}
+  m_Layer: 10
   m_Name: Player
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -149,7 +150,7 @@ Transform:
   - {fileID: 4868760203802216096}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &5853055941850825285
+--- !u!114 &1519021727044664401
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -158,12 +159,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 5033222587543127086}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 885df2c18d5600a48bfce2b4dae149a5, type: 3}
+  m_Script: {fileID: 11500000, guid: 1e02d298b451cad4db8587c56be5b393, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerMove
-  _groundLayer:
-    serializedVersion: 2
-    m_Bits: 0
+  m_EditorClassIdentifier: Assembly-CSharp::UnitMove
 --- !u!114 &4991973681043283286
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -187,8 +185,8 @@ NavMeshAgent:
   m_Enabled: 1
   m_AgentTypeID: 0
   m_Radius: 0.5
-  m_Speed: 3.5
-  m_Acceleration: 8
+  m_Speed: 6
+  m_Acceleration: 10000
   avoidancePriority: 50
   m_AngularSpeed: 120
   m_StoppingDistance: 0
@@ -199,3 +197,26 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
+--- !u!136 &3859275648243693806
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5033222587543127086}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.5
+  m_Height: 2
+  m_Direction: 1
+  m_Center: {x: 0, y: 0.5, z: 0}
