@@ -18,8 +18,11 @@ public class PlayerMove : MonoBehaviour
     // Camera
     [SerializeField] private Camera _mainCamera;
 
-    private Vector2 _currentMousePos;
     public Vector2 CurrentMousePos => _currentMousePos;
+    private Vector2 _currentMousePos;
+
+    private Vector2 _startMousePos;
+    [SerializeField] private RectTransform _selectionBoxVisual;
 
     [SerializeField] private LayerMask _groundLayer;
     [SerializeField] private LayerMask _teamLayer;
@@ -51,7 +54,8 @@ public class PlayerMove : MonoBehaviour
     private void OnEnable()
     {
           _moveAction.performed += OnMovePerformed;
-        _selectAction.performed += OnSelectPerformed;
+        _selectAction.performed += OnSelectStarted;
+        _selectAction.canceled  += OnSelectCanceled;
 
             _moveAction.Enable();
         _mousePosAction.Enable();
@@ -61,16 +65,22 @@ public class PlayerMove : MonoBehaviour
     private void Update()
     {
         _currentMousePos = _mousePosAction.ReadValue<Vector2>();
+
+        if (_selectionBoxVisual.gameObject.activeInHierarchy)
+        {
+            UpdateSelectionBoxVisual();
+        }
     }
 
     private void OnDisable()
     {
           _moveAction.performed -= OnMovePerformed;
-        _selectAction.performed -= OnSelectPerformed;
+        _selectAction.performed -= OnSelectStarted;
+        _selectAction.canceled  -= OnSelectCanceled;
 
             _moveAction.Disable();
         _mousePosAction.Disable();
-          _selectAction.Enable();
+          _selectAction.Disable();
     }
 
     private void OnMovePerformed(InputAction.CallbackContext ctx)
@@ -89,7 +99,27 @@ public class PlayerMove : MonoBehaviour
         }
     }
 
-    private void OnSelectPerformed(InputAction.CallbackContext ctx)
+    private void OnSelectStarted(InputAction.CallbackContext ctx)
+    {
+        _startMousePos = _currentMousePos;
+        _selectionBoxVisual.gameObject.SetActive(true);
+    }
+
+    private void OnSelectCanceled(InputAction.CallbackContext ctx)
+    {
+        _selectionBoxVisual.gameObject.SetActive(false);
+
+        if (Vector2.Distance(_startMousePos, _currentMousePos) < 5f)
+        {
+            SingleSelect();
+        }
+        else
+        {
+            BoxSelect();
+        }
+    }
+
+    private void SingleSelect()
     {
         Ray ray = Camera.main.ScreenPointToRay(_currentMousePos);
         RaycastHit hit;
@@ -97,7 +127,7 @@ public class PlayerMove : MonoBehaviour
         if (Physics.Raycast(ray, out hit, Mathf.Infinity, _teamLayer))
         {
             UnitMove unit = hit.collider.GetComponentInParent<UnitMove>();
-            if(unit != null)
+            if (unit != null)
             {
                 ClearSelection();
                 selectedUnits.Add(unit);
@@ -106,6 +136,26 @@ public class PlayerMove : MonoBehaviour
             else
             {
                 selectedUnits.Clear();
+            }
+        }
+        else
+        {
+            ClearSelection();
+        }
+    }
+
+    private void BoxSelect()
+    {
+        ClearSelection();
+
+        foreach (var unit in UnitMove.AllUnits)
+        {
+            Vector3 screenPos = Camera.main.WorldToScreenPoint(unit.transform.position);
+
+            if (IsInsideSelectionBox(screenPos))
+            {
+                selectedUnits.Add(unit);
+                unit.SetSelected(true);
             }
         }
     }
@@ -117,5 +167,30 @@ public class PlayerMove : MonoBehaviour
             unit.SetSelected(false); // 외곽선 끄기
         }
         selectedUnits.Clear();
+    }
+
+    private void UpdateSelectionBoxVisual()
+    {
+        float width = _currentMousePos.x - _startMousePos.x;
+        float height = _currentMousePos.y - _startMousePos.y;
+
+        _selectionBoxVisual.sizeDelta = new Vector2(Mathf.Abs(width), Mathf.Abs(height));
+
+        float minX = Mathf.Min(_startMousePos.x, _currentMousePos.x);
+        float minY = Mathf.Min(_startMousePos.y, _currentMousePos.y);
+
+        _selectionBoxVisual.anchoredPosition = new Vector2(minX, minY);
+    }
+
+    private bool IsInsideSelectionBox(Vector3 screenPos)
+    {
+        Rect rect = new Rect(
+            Mathf.Min(_startMousePos.x, _currentMousePos.x),
+            Mathf.Min(_startMousePos.y, _currentMousePos.y),
+            Mathf.Abs(_startMousePos.x - _currentMousePos.x),
+            Mathf.Abs(_startMousePos.y - _currentMousePos.y)
+        );
+
+        return rect.Contains(screenPos);
     }
 }

@@ -1,8 +1,12 @@
+using NUnit.Framework;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
 public class UnitMove : MonoBehaviour
 {
+    public static List<UnitMove> AllUnits = new List<UnitMove>();
+
     protected NavMeshAgent _agent;
 
     protected Animator _animator;
@@ -22,9 +26,22 @@ public class UnitMove : MonoBehaviour
         }
     }
 
+    private void OnEnable()
+    {
+        if (!AllUnits.Contains(this))
+        {
+            AllUnits.Add(this);
+        }
+    }
+
     protected virtual void Update()
     {
         
+    }
+
+    private void OnDisable()
+    {
+        AllUnits.Remove(this);
     }
 
     public void MoveTo(Vector3 targetPos)
