@@ -5,6 +5,9 @@ using UnityEngine.InputSystem;
 
 public class PlayerMove : MonoBehaviour
 {
+    // Instance
+    public static PlayerMove Instance { get; private set; }
+
     // InputActions
     private PlayerInput _playerInput;
 
@@ -12,7 +15,11 @@ public class PlayerMove : MonoBehaviour
     private InputAction _mousePosAction;
     private InputAction _selectAction;
 
+    // Camera
+    [SerializeField] private Camera _mainCamera;
+
     private Vector2 _currentMousePos;
+    public Vector2 CurrentMousePos => _currentMousePos;
 
     [SerializeField] private LayerMask _groundLayer;
     [SerializeField] private LayerMask _teamLayer;
@@ -20,8 +27,17 @@ public class PlayerMove : MonoBehaviour
     // Select
     public List<UnitMove> selectedUnits = new List<UnitMove>();
 
+    //
+
     private void Awake()
     {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+
         _playerInput = GetComponent<PlayerInput>();
 
         if (_playerInput != null)
@@ -59,7 +75,9 @@ public class PlayerMove : MonoBehaviour
 
     private void OnMovePerformed(InputAction.CallbackContext ctx)
     {
-        Ray ray = Camera.main.ScreenPointToRay(_currentMousePos);
+        if (_mainCamera == null) return;
+
+        Ray ray = _mainCamera.ScreenPointToRay(_currentMousePos);
         RaycastHit hit;
 
         if (Physics.Raycast(ray, out hit, Mathf.Infinity, _groundLayer))
@@ -73,25 +91,31 @@ public class PlayerMove : MonoBehaviour
 
     private void OnSelectPerformed(InputAction.CallbackContext ctx)
     {
-        Debug.Log("클릭 실행");
         Ray ray = Camera.main.ScreenPointToRay(_currentMousePos);
         RaycastHit hit;
 
         if (Physics.Raycast(ray, out hit, Mathf.Infinity, _teamLayer))
         {
-            Debug.Log("레이캐스트");
-            UnitMove unit = hit.collider.GetComponent<UnitMove>();
+            UnitMove unit = hit.collider.GetComponentInParent<UnitMove>();
             if(unit != null)
             {
-                selectedUnits.Clear();
+                ClearSelection();
                 selectedUnits.Add(unit);
-                Debug.Log("선택됨!");
+                unit.SetSelected(true);
             }
             else
             {
                 selectedUnits.Clear();
-                Debug.Log("선택된 유닛 없음");
             }
         }
+    }
+
+    private void ClearSelection()
+    {
+        foreach (var unit in selectedUnits)
+        {
+            unit.SetSelected(false); // 외곽선 끄기
+        }
+        selectedUnits.Clear();
     }
 }

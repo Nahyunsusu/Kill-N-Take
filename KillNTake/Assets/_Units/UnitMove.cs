@@ -7,9 +7,19 @@ public class UnitMove : MonoBehaviour
 
     protected Animator _animator;
 
-    protected virtual void Awake()
+    private Outline _outline;
+
+    private void Awake()
     {
         _agent = GetComponent<NavMeshAgent>();
+
+        _outline = GetComponent<Outline>();
+        if (_outline != null)
+        {
+            _outline.enabled = false;
+            _outline.OutlineWidth = 5f;
+            _outline.OutlineColor = Color.green;
+        }
     }
 
     protected virtual void Update()
@@ -41,6 +51,14 @@ public class UnitMove : MonoBehaviour
         {
             _agent.isStopped = true;
             _agent.ResetPath();     
+        }
+    }
+
+    public void SetSelected(bool isSelected)
+    {
+        if (_outline != null)
+        {
+            _outline.enabled = isSelected;
         }
     }
 }
