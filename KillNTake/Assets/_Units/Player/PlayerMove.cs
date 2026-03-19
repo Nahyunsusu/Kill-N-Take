@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 
 public class PlayerMove : MonoBehaviour
@@ -11,26 +12,26 @@ public class PlayerMove : MonoBehaviour
     // InputActions
     private PlayerInput _playerInput;
 
-    private InputAction _moveAction;
+    private InputAction     _moveAction;
     private InputAction _mousePosAction;
-    private InputAction _selectAction;
+    private InputAction   _selectAction;
 
     // Camera
     [SerializeField] private Camera _mainCamera;
 
-    public Vector2 CurrentMousePos => _currentMousePos;
+     public Vector2  CurrentMousePos => _currentMousePos;
     private Vector2 _currentMousePos;
 
     private Vector2 _startMousePos;
     [SerializeField] private RectTransform _selectionBoxVisual;
 
     [SerializeField] private LayerMask _groundLayer;
-    [SerializeField] private LayerMask _teamLayer;
+    [SerializeField] private LayerMask   _teamLayer;
+
+    private bool _isMoveQueued = false;
 
     // Select
     public List<UnitMove> selectedUnits = new List<UnitMove>();
-
-    //
 
     private void Awake()
     {
@@ -49,6 +50,11 @@ public class PlayerMove : MonoBehaviour
             _mousePosAction = _playerInput.actions.FindAction("MousePosition");
               _selectAction = _playerInput.actions.FindAction("Select");
         }
+    }
+
+    private void Start()
+    {
+        _selectionBoxVisual.gameObject.SetActive(false);
     }
 
     private void OnEnable()
@@ -70,6 +76,12 @@ public class PlayerMove : MonoBehaviour
         {
             UpdateSelectionBoxVisual();
         }
+
+        if (_isMoveQueued)
+        {
+            ExecuteMove();
+            _isMoveQueued = false; // 신호 초기화
+        }
     }
 
     private void OnDisable()
@@ -85,18 +97,7 @@ public class PlayerMove : MonoBehaviour
 
     private void OnMovePerformed(InputAction.CallbackContext ctx)
     {
-        if (_mainCamera == null) return;
-
-        Ray ray = _mainCamera.ScreenPointToRay(_currentMousePos);
-        RaycastHit hit;
-
-        if (Physics.Raycast(ray, out hit, Mathf.Infinity, _groundLayer))
-        {
-            foreach (var unit in selectedUnits)
-            {
-                unit.MoveTo(hit.point);
-            }
-        }
+        _isMoveQueued = true;
     }
 
     private void OnSelectStarted(InputAction.CallbackContext ctx)
@@ -116,6 +117,24 @@ public class PlayerMove : MonoBehaviour
         else
         {
             BoxSelect();
+        }
+    }
+
+    private void ExecuteMove()
+    {
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
+
+        if (_mainCamera == null) return;
+
+        Ray ray = _mainCamera.ScreenPointToRay(_currentMousePos);
+        RaycastHit hit;
+
+        if (Physics.Raycast(ray, out hit, Mathf.Infinity, _groundLayer))
+        {
+            foreach (var unit in selectedUnits)
+            {
+                unit.MoveTo(hit.point);
+            }
         }
     }
 
@@ -171,7 +190,7 @@ public class PlayerMove : MonoBehaviour
 
     private void UpdateSelectionBoxVisual()
     {
-        float width = _currentMousePos.x - _startMousePos.x;
+        float  width = _currentMousePos.x - _startMousePos.x;
         float height = _currentMousePos.y - _startMousePos.y;
 
         _selectionBoxVisual.sizeDelta = new Vector2(Mathf.Abs(width), Mathf.Abs(height));
@@ -185,8 +204,8 @@ public class PlayerMove : MonoBehaviour
     private bool IsInsideSelectionBox(Vector3 screenPos)
     {
         Rect rect = new Rect(
-            Mathf.Min(_startMousePos.x, _currentMousePos.x),
-            Mathf.Min(_startMousePos.y, _currentMousePos.y),
+            Mathf.Min(_startMousePos.x,  _currentMousePos.x),
+            Mathf.Min(_startMousePos.y,  _currentMousePos.y),
             Mathf.Abs(_startMousePos.x - _currentMousePos.x),
             Mathf.Abs(_startMousePos.y - _currentMousePos.y)
         );
